@@ -1,0 +1,5 @@
+During development process:
+
+"npm i" to install all dependencies.
+Run "ts-node index.ts" in the /server folder.
+Run "npm start" in the /client folder. 
