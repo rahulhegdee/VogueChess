@@ -1,25 +1,32 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+const socket = io("http://localhost:8080", { autoConnect: false }); // note: we should change this into a useContext
 
 function App() {
-	// THIS ALL NEEDS TO GO IN A useeffect with a unmounting sequence that disconnects.
+	const [isConnected, setIsConnected] = useState(false);
+	useEffect(() => {
+		socket.connect();
 
-	const socket = io("http://localhost:8080");
-	socket.on("connect", () => {
-		console.log(socket.id);
-	});
+		socket.on("connect", () => {
+			setIsConnected(true);
+		});
 
-	socket.on("disconnect", () => {
-		console.log(socket.id);
-	});
+		socket.on("disconnect", () => {
+			setIsConnected(false);
+		});
+
+		return () => {
+			socket.disconnect();
+		};
+	}, []);
 
 	const handlePress = () => {
-		socket.emit("newgame", "player1");
+		if (isConnected) {
+			socket.emit("newgame", "player1");
+		}
 	};
 	return (
-		<div className="App">
-			<button onClick={handlePress} />
-		</div>
+		<div className="App">{isConnected && <button onClick={handlePress} />}</div>
 	);
 }
 
