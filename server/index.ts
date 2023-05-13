@@ -11,11 +11,23 @@ const io = new Server(server, {
 	},
 });
 
+let playerCount = 0;
+
 io.on("connection", (socket) => {
 	console.log("connected");
+
 	socket.on("newgame", (arg) => {
 		console.log(arg);
 	});
+
+	socket.on("join_game", (arg) => {
+		console.log(arg);
+		socket.emit("game_status", playerCount === 2 ? "full" : "joined");
+		if (playerCount !== 2) {
+			playerCount += 1;
+		}
+	});
+
 	socket.on("disconnect", () => {
 		console.log("disconnected");
 	});

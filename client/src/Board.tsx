@@ -1,4 +1,3 @@
-import react from "react";
 import { Chessboard } from "react-chessboard";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
