@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import Board from "./Board";
 const socket = io("http://localhost:8080", { autoConnect: false }); // note: we should change this into a useContext
 
 function App() {
@@ -26,7 +27,10 @@ function App() {
 		}
 	};
 	return (
-		<div className="App">{isConnected && <button onClick={handlePress} />}</div>
+		<div className="App">
+			{isConnected && <button onClick={handlePress} />}
+			<Board />
+		</div>
 	);
 }
 
