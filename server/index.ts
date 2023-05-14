@@ -12,12 +12,20 @@ const io = new Server(server, {
 });
 
 let playerCount = 0;
+let idsRecieved: Number[] = [];
 
 io.on("connection", (socket) => {
 	console.log("connected");
 
-	socket.on("newgame", (arg) => {
-		console.log(arg);
+	socket.on("game", (id: Number) => {
+		console.log("recieved game");
+		if (idsRecieved.includes(id)) {
+			setTimeout(() => {
+				socket.emit("test");
+			}, 10000);
+		}
+
+		idsRecieved.push(id);
 	});
 
 	socket.on("join_game", (arg) => {
