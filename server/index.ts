@@ -11,28 +11,27 @@ const io = new Server(server, {
 	},
 });
 
-let playerCount = 0;
-let idsRecieved: Number[] = [];
+let id = 0;
+let games: { [key: string]: any } = {};
 
 io.on("connection", (socket) => {
 	console.log("connected");
 
-	socket.on("game", (id: Number) => {
-		console.log("recieved game");
-		if (idsRecieved.includes(id)) {
-			setTimeout(() => {
-				socket.emit("test");
-			}, 10000);
-		}
-
-		idsRecieved.push(id);
+	socket.on("SEND_REQUEST_GAMES", () => {
+		socket.emit("GAMES_FOUND", games);
 	});
 
-	socket.on("join_game", (arg) => {
-		console.log(arg);
-		socket.emit("game_status", playerCount === 2 ? "full" : "joined");
-		if (playerCount !== 2) {
-			playerCount += 1;
+	socket.on("SEND_CREATE_GAME", () => {
+		games[id] = { players: 0, spectators: 0 };
+		id += 1;
+		socket.emit("GAMES_FOUND", games);
+	});
+
+	socket.on("SEND_JOIN_GAME", (gameId: string) => {
+		if (gameId in games) {
+			games[gameId].players === 2
+				? (games[gameId].spectators += 1)
+				: (games[gameId].players += 1);
 		}
 	});
 
