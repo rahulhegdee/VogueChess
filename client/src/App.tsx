@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Lobby from "./Lobby";
+import Board from "./Board";
 import { socket, SocketContext } from "./context/socket";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 function App() {
 	const [isConnected, setIsConnected] = useState(false);
@@ -20,9 +22,14 @@ function App() {
 		};
 	}, []);
 
+	const router = createBrowserRouter([
+		{ path: "/", element: <>{isConnected ? <Lobby /> : "Not connected."}</> },
+		{ path: "/game", element: <Board /> },
+	]);
+
 	return (
 		<SocketContext.Provider value={socket}>
-			{isConnected ? <Lobby /> : "Not connected."}
+			<RouterProvider router={router} />
 		</SocketContext.Provider>
 	);
 }

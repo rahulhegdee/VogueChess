@@ -1,5 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./context/socket";
+import { redirect } from "react-router-dom";
+import Board from "./Board";
 function Lobby() {
 	const [games, setGames] = useState<{}>({});
 	const socket = useContext(SocketContext);
@@ -24,6 +26,7 @@ function Lobby() {
 
 	function joinGame(id: string) {
 		socket.emit("SEND_JOIN_GAME", id);
+		return redirect("/game");
 	}
 
 	return (
@@ -42,6 +45,7 @@ function Lobby() {
 				<p>No Games.</p>
 			)}
 			<button onClick={createGame}>Create Game</button>
+			<Board />
 		</div>
 	);
 }
