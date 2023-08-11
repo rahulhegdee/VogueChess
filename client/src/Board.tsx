@@ -1,155 +1,83 @@
 import { Chessboard } from "react-chessboard";
-import { Piece, Square } from "react-chessboard/dist/chessboard/types";
-import { useState } from "react";
+import {
+	PromotionPieceOption,
+	Square,
+} from "react-chessboard/dist/chessboard/types";
+import { useState, useMemo } from "react";
 import { Chess } from "chess.js";
 
 function Board() {
-	const [game, setGame] = useState<any>(new Chess());
-	const [moveFrom, setMoveFrom] = useState<Square | null>();
-	const [moveTo, setMoveTo] = useState<Square | null>();
+	const game = useMemo(() => {
+		return new Chess();
+	}, []);
+	const [selectedSquare, setSelectedSquare] = useState<Square | null>();
+	const [possibleMoves, setPossibleMoves] = useState<any[]>();
 	const [showPromotionDialog, setShowPromotionDialog] = useState(false);
-	const [rightClickedSquares, setRightClickedSquares] = useState<any>({}); // FIX: add actual type
-	const [moveSquares, setMoveSquares] = useState({});
-	const [optionSquares, setOptionSquares] = useState({});
+	const [promotionSquare, setPromotionSquare] = useState<Square | null>();
 
-	function pieceHandler(piece: any) {
-		console.log(piece);
-	}
-
-	function getMoveOptions(square: Square) {
+	function squareSelectionHandler(square: Square) {
+		setSelectedSquare(square);
 		const moves = game.moves({
 			square,
 			verbose: true,
 		});
-		if (moves.length === 0) {
-			setOptionSquares({});
-			return false;
-		}
-
-		const newSquares: any = {};
-		moves.map((move: any) => {
-			newSquares[move.to] = {
-				background:
-					game.get(move.to) &&
-					game.get(move.to).color !== game.get(square).color
-						? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
-						: "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
-				borderRadius: "50%",
-			};
-			return move;
-		});
-		newSquares[square] = {
-			background: "rgba(255, 255, 0, 0.4)",
-		};
-		setOptionSquares(newSquares);
-		return true;
+		setPossibleMoves(moves);
 	}
 
 	function onSquareClick(square: Square) {
-		setRightClickedSquares({});
-
-		// from square
-		if (moveFrom == null) {
-			const hasMoveOptions = getMoveOptions(square);
-			if (hasMoveOptions) setMoveFrom(square);
+		if (selectedSquare == null) {
+			squareSelectionHandler(square);
 			return;
 		}
 
-		// to square
-		if (moveTo == null) {
-			// check if valid move before showing dialog
-			const moves =
-				moveFrom == null
-					? []
-					: game.moves({
-							square: moveFrom,
-							verbose: true,
-					  });
-			const foundMove = moves.find(
-				(m: any) => m.from === moveFrom && m.to === square
-			);
-			// not a valid move
-			if (!foundMove) {
-				// check if clicked on new piece
-				const hasMoveOptions = getMoveOptions(square);
-				// if new piece, setMoveFrom, otherwise clear moveFrom
-				setMoveFrom(hasMoveOptions ? square : null);
-				return;
-			}
-
-			// valid move
-			setMoveTo(square);
-
+		if (possibleMoves?.find((move) => move.to === square)) {
+			const pieceInfo = game.get(selectedSquare);
 			// if promotion move
 			if (
-				(foundMove.color === "w" &&
-					foundMove.piece === "p" &&
+				(pieceInfo.color === "w" &&
+					pieceInfo.type === "p" &&
 					square[1] === "8") ||
-				(foundMove.color === "b" &&
-					foundMove.piece === "p" &&
-					square[1] === "1")
+				(pieceInfo.color === "b" && pieceInfo.type === "p" && square[1] === "1")
 			) {
+				setPromotionSquare(square);
 				setShowPromotionDialog(true);
 				return;
 			}
 
-			// is normal move
-			const gameCopy = { ...game };
-			const move = gameCopy.move({
-				from: moveFrom,
-				to: square,
-				promotion: "q",
-			});
-
-			// if invalid, setMoveFrom and getMoveOptions
-			if (move === null) {
-				const hasMoveOptions = getMoveOptions(square);
-				if (hasMoveOptions) setMoveFrom(square);
-				return;
-			}
-
-			setGame(gameCopy);
-
-			setMoveFrom(null);
-			setMoveTo(null);
-			setOptionSquares({});
-			return;
+			game.move({ from: selectedSquare, to: square });
+			setSelectedSquare(null);
+			setPossibleMoves([]);
+		} else {
+			squareSelectionHandler(square);
 		}
 	}
 
-	function onSquareRightClick(square: Square) {
-		const colour = "rgba(0, 0, 255, 0.4)";
-		setRightClickedSquares({
-			...rightClickedSquares,
-			[square]:
-				rightClickedSquares[square] &&
-				rightClickedSquares[square].backgroundColor === colour
-					? undefined
-					: { backgroundColor: colour },
-		});
+	function onPromotionPieceSelect(piece: PromotionPieceOption | undefined) {
+		// if no piece passed then user has cancelled dialog, don't make move and reset
+		if (piece && selectedSquare != null && promotionSquare != null) {
+			game.move({
+				from: selectedSquare,
+				to: promotionSquare,
+				promotion: piece[1].toLowerCase() ?? "q",
+			});
+		}
+
+		setSelectedSquare(null);
+		setPromotionSquare(null);
+		setShowPromotionDialog(false);
+		setPossibleMoves([]);
+		return true;
 	}
 
 	return (
 		<Chessboard
 			boardWidth={500}
-			onPieceClick={pieceHandler}
-			animationDuration={200}
-			// arePiecesDraggable={true}
-			position={game.fen()}
 			onSquareClick={onSquareClick}
-			onSquareRightClick={onSquareRightClick}
-			// onPromotionPieceSelect={onPromotionPieceSelect}
-			// customBoardStyle={{
-			// 	borderRadius: "4px",
-			// 	boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-			// }}
-			customSquareStyles={{
-				...moveSquares,
-				...optionSquares,
-				...rightClickedSquares,
-			}}
-			promotionToSquare={moveTo}
+			animationDuration={200}
+			position={game.fen()}
+			promotionToSquare={promotionSquare}
 			showPromotionDialog={showPromotionDialog}
+			onPromotionPieceSelect={onPromotionPieceSelect}
 		/>
 	);
 }
