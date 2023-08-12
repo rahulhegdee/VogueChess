@@ -24,7 +24,7 @@ function App() {
 
 	const router = createBrowserRouter([
 		{ path: "/", element: <>{isConnected ? <Lobby /> : "Not connected."}</> },
-		{ path: "/game", element: <Board /> },
+		{ path: "/game/:gameID", element: <Board /> },
 	]);
 
 	return (
