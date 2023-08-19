@@ -3,10 +3,14 @@ import {
 	PromotionPieceOption,
 	Square,
 } from "react-chessboard/dist/chessboard/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
 import { Chess } from "chess.js";
+import { SocketContext } from "./context/socket";
+import { useLocation } from "react-router-dom";
 
 function Board() {
+	const path = useLocation();
+	const socket = useContext(SocketContext);
 	const game = useMemo(() => {
 		return new Chess();
 	}, []);
@@ -14,6 +18,19 @@ function Board() {
 	const [possibleMoves, setPossibleMoves] = useState<any[]>();
 	const [showPromotionDialog, setShowPromotionDialog] = useState(false);
 	const [promotionSquare, setPromotionSquare] = useState<Square | null>();
+	const [gameState, setGameState] = useState<string>(game.fen());
+
+	useEffect(() => {
+		function updateGameState(newState: string) {
+			game.load(newState);
+			setGameState(newState);
+		}
+		socket.on("UPDATE_GAME", updateGameState);
+
+		return () => {
+			socket.off("UPDATE_GAME", updateGameState);
+		};
+	}, [socket, game]);
 
 	function squareSelectionHandler(square: Square) {
 		setSelectedSquare(square);
@@ -45,6 +62,8 @@ function Board() {
 			}
 
 			game.move({ from: selectedSquare, to: square });
+			const gameId = path.pathname.substring(6);
+			socket.emit("MAKE_MOVE", [gameId, game.fen()]);
 			setSelectedSquare(null);
 			setPossibleMoves([]);
 		} else {

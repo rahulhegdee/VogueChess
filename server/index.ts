@@ -32,6 +32,16 @@ io.on("connection", (socket) => {
 			games[gameId].players === 2
 				? (games[gameId].spectators += 1)
 				: (games[gameId].players += 1);
+			socket.join(`game${gameId}`);
+		}
+	});
+
+	socket.on("MAKE_MOVE", (gameInfo: string[2]) => {
+		const gameId = gameInfo[0];
+		const gameState = gameInfo[1];
+		if (gameId in games) {
+			games[gameId].state = gameState;
+			socket.to(`game${gameId}`).emit("UPDATE_GAME", gameState);
 		}
 	});
 

@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./context/socket";
 import { useNavigate } from "react-router-dom";
-import Board from "./Board";
 function Lobby() {
 	const [games, setGames] = useState<{}>({});
 	const socket = useContext(SocketContext);
