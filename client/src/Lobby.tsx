@@ -25,7 +25,6 @@ function Lobby() {
 	}
 
 	function joinGame(id: string) {
-		socket.emit("SEND_JOIN_GAME", id);
 		navigate(`/game/${id}`);
 	}
 

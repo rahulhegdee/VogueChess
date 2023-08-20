@@ -12,6 +12,8 @@ const io = new Server(server, {
 });
 
 let id = 0;
+const startPosition =
+	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 let games: { [key: string]: any } = {};
 
 io.on("connection", (socket) => {
@@ -22,7 +24,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("SEND_CREATE_GAME", () => {
-		games[id] = { players: 0, spectators: 0 };
+		games[id] = { players: 0, spectators: 0, state: startPosition };
 		id += 1;
 		socket.emit("GAMES_FOUND", games);
 	});
@@ -33,6 +35,16 @@ io.on("connection", (socket) => {
 				? (games[gameId].spectators += 1)
 				: (games[gameId].players += 1);
 			socket.join(`game${gameId}`);
+			const gameState = games[gameId].state;
+			//necessary if the game is ongoing and the client disconnects and reconnects
+			socket.emit("UPDATE_GAME", gameState);
+		}
+	});
+
+	socket.on("SEND_LEAVE_GAME", (gameId: string) => {
+		if (gameId in games) {
+			games[gameId].spectators -= 1; //replace with sensible code in the future
+			socket.leave(`game${gameId}`);
 		}
 	});
 
