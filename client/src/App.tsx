@@ -3,6 +3,7 @@ import Lobby from "./Lobby";
 import Board from "./Board";
 import { socket, SocketContext } from "./context/socket";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Login from "./Login";
 
 function App() {
 	const [isConnected, setIsConnected] = useState(false);
@@ -23,7 +24,11 @@ function App() {
 	}, []);
 
 	const router = createBrowserRouter([
-		{ path: "/", element: <>{isConnected ? <Lobby /> : "Not connected."}</> },
+		{ path: "/", element: <Login /> },
+		{
+			path: "/lobby",
+			element: <>{isConnected ? <Lobby /> : "Not connected."}</>,
+		},
 		{ path: "/game/:gameID", element: <Board /> },
 	]);
 
