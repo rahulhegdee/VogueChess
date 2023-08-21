@@ -1,0 +1,17 @@
+{
+  "name": "vogue-chess-server",
+  "version": "1.0.0",
+  "description": "Server dependencies for Vogue Chess",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rahul Hegde",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "google-auth-library": "^9.0.0",
+    "http": "^0.0.1-security",
+    "socket.io": "^4.7.2"
+  }
+}
