@@ -1,15 +1,15 @@
 import { createContext, useEffect, useState } from "react";
-import Lobby from "./Lobby";
-import Board from "./Board";
 import Login from "./Login";
 import { Socket, io } from "socket.io-client";
 import Home from "./Home";
+import { useCookies } from "react-cookie";
 
 export const SocketContext = createContext<Socket>(io());
 
 function App() {
 	const [socket, setSocket] = useState<Socket>(io());
 	const [isConnected, setIsConnected] = useState(false);
+	const [cookies, setCookie] = useCookies(["token"]);
 
 	useEffect(() => {
 		console.log(socket);
@@ -27,6 +27,19 @@ function App() {
 		};
 	}, [socket]);
 
+	useEffect(() => {
+		const token = cookies.token;
+
+		if (token != null) {
+			const newSocket = io("http://localhost:8080", {
+				autoConnect: false,
+				auth: { token },
+			});
+
+			setSocket(newSocket);
+		}
+	}, [cookies]);
+
 	return (
 		<div>
 			{isConnected ? (
@@ -35,8 +48,8 @@ function App() {
 				</SocketContext.Provider>
 			) : (
 				<Login
-					setSocket={(s) => {
-						setSocket(s);
+					setToken={(t) => {
+						setCookie("token", t);
 					}}
 				/>
 			)}

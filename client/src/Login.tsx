@@ -1,19 +1,13 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { Socket, io } from "socket.io-client";
 
 type LoginProps = {
-	setSocket: (socket: Socket) => void;
+	setToken: (token: string) => void;
 };
 
-function Login({ setSocket }: LoginProps) {
+function Login({ setToken }: LoginProps) {
 	function connectToSocket(token: string | undefined) {
 		if (token != null) {
-			const socket = io("http://localhost:8080", {
-				autoConnect: false,
-				auth: { token },
-			});
-
-			setSocket(socket);
+			setToken(token);
 		}
 	}
 	return (
