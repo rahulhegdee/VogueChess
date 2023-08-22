@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import Lobby from "./Lobby";
 import Board from "./Board";
-import { socket, SocketContext } from "./context/socket";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./Login";
+import { Socket, io } from "socket.io-client";
+import Home from "./Home";
+
+export const SocketContext = createContext<Socket>(io());
 
 function App() {
+	const [socket, setSocket] = useState<Socket>(io());
 	const [isConnected, setIsConnected] = useState(false);
 
 	useEffect(() => {
+		console.log(socket);
 		socket.connect();
 
 		socket.on("connect", () => {
@@ -16,26 +20,27 @@ function App() {
 		});
 
 		return () => {
-			setIsConnected(false);
 			if (socket.connected) {
+				setIsConnected(false);
 				socket.disconnect();
 			}
 		};
-	}, []);
-
-	const router = createBrowserRouter([
-		{ path: "/", element: <Login /> },
-		{
-			path: "/lobby",
-			element: <>{isConnected ? <Lobby /> : "Not connected."}</>,
-		},
-		{ path: "/game/:gameID", element: <Board /> },
-	]);
+	}, [socket]);
 
 	return (
-		<SocketContext.Provider value={socket}>
-			<RouterProvider router={router} />
-		</SocketContext.Provider>
+		<div>
+			{isConnected ? (
+				<SocketContext.Provider value={socket}>
+					<Home />
+				</SocketContext.Provider>
+			) : (
+				<Login
+					setSocket={(s) => {
+						setSocket(s);
+					}}
+				/>
+			)}
+		</div>
 	);
 }
 

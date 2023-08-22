@@ -5,7 +5,7 @@ import {
 } from "react-chessboard/dist/chessboard/types";
 import { useState, useMemo, useEffect, useContext, useCallback } from "react";
 import { Chess } from "chess.js";
-import { SocketContext } from "./context/socket";
+import { SocketContext } from "./App";
 import { useLocation } from "react-router-dom";
 
 function Board() {

@@ -1,6 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import { verify } from "./auth";
 
 const port = process.env.PORT || 8080;
 const app = express();
@@ -15,6 +16,18 @@ let id = 0;
 const startPosition =
 	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 let games: { [key: string]: any } = {};
+
+io.use(async (socket, next) => {
+	const token = socket.handshake.auth.token;
+	console.log(token);
+	const verification = await verify(token);
+	if (verification?.error == null) {
+		// socket.user = verification;
+		next();
+	} else {
+		next(new Error(verification.error));
+	}
+});
 
 io.on("connection", (socket) => {
 	console.log("connected");
