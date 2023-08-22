@@ -2,30 +2,16 @@ import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import { verify } from "./auth";
-import { TokenPayload } from "google-auth-library";
+import {
+	ClientToServerEvents,
+	ServerToClientEvents,
+	InterServerEvents,
+	SocketData,
+} from "./socket_interfaces";
 
 const port = process.env.PORT || 8080;
 const app = express();
 const server = createServer(app);
-
-interface SocketData {
-	user: TokenPayload;
-}
-
-interface ClientToServerEvents {
-	SEND_REQUEST_GAMES: () => void;
-	SEND_CREATE_GAME: () => void;
-	SEND_JOIN_GAME: (gameId: string) => void;
-	SEND_LEAVE_GAME: (gameId: string) => void;
-	MAKE_MOVE: (gameInfo: string[2]) => void;
-}
-
-interface ServerToClientEvents {
-	GAMES_FOUND: (games: { [key: string]: any }) => void;
-	UPDATE_GAME: (gameState: any) => void;
-}
-
-interface InterServerEvents {}
 
 const io = new Server<
 	ClientToServerEvents,
