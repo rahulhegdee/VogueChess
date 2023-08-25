@@ -8,6 +8,7 @@ import {
 	InterServerEvents,
 	SocketData,
 } from "./socket_interfaces";
+import { getUser, addOrUpdateUser, addGame } from "./database";
 
 const port = process.env.PORT || 8080;
 const app = express();
@@ -41,8 +42,18 @@ io.use(async (socket, next) => {
 	}
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	console.log("connected");
+
+	const user = await getUser(socket.data.user.sub);
+	socket.data.username = user.username;
+	socket.emit("USERNAME_INFO", user.username);
+
+	socket.on("CREATE_USER", (username: string) => {
+		if (socket.data.username == "") {
+			addOrUpdateUser(socket.data.user.sub, username);
+		}
+	});
 
 	socket.on("SEND_REQUEST_GAMES", () => {
 		socket.emit("GAMES_FOUND", games);

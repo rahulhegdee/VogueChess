@@ -10,6 +10,7 @@ function App() {
 	const [socket, setSocket] = useState<Socket>(io());
 	const [isConnected, setIsConnected] = useState(false);
 	const [cookies, setCookie] = useCookies(["token"]);
+	const [username, setUsername] = useState("");
 
 	useEffect(() => {
 		console.log(socket);
@@ -17,6 +18,10 @@ function App() {
 
 		socket.on("connect", () => {
 			setIsConnected(true);
+		});
+
+		socket.on("USERNAME_INFO", (name) => {
+			setUsername(name);
 		});
 
 		return () => {
@@ -44,7 +49,12 @@ function App() {
 		<div>
 			{isConnected ? (
 				<SocketContext.Provider value={socket}>
-					<Home />
+					<Home
+						username={username}
+						setUsername={(u: string) => {
+							setUsername(u);
+						}}
+					/>
 				</SocketContext.Provider>
 			) : (
 				<Login

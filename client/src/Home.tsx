@@ -1,8 +1,14 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Lobby from "./Lobby";
 import Board from "./Board";
+import CreateUser from "./CreateUser";
 
-function Home() {
+type HomeProps = {
+	username: string;
+	setUsername: (u: string) => void;
+};
+
+function Home({ username, setUsername }: HomeProps) {
 	const router = createBrowserRouter([
 		{
 			path: "/",
@@ -15,7 +21,11 @@ function Home() {
 		{ path: "/game/:gameID", element: <Board /> },
 	]);
 
-	return <RouterProvider router={router} />;
+	return username !== "" ? (
+		<RouterProvider router={router} />
+	) : (
+		<CreateUser setUsername={setUsername} />
+	);
 }
 
 export default Home;
