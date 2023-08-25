@@ -8,7 +8,8 @@ import {
 	InterServerEvents,
 	SocketData,
 } from "./socket_interfaces";
-import { getUser, addOrUpdateUser, addGame } from "./database";
+import { getUsername, getUserId, addOrUpdateUser, addGame } from "./database";
+import { ColorOptions } from "./types";
 
 const port = process.env.PORT || 8080;
 const app = express();
@@ -45,7 +46,7 @@ io.use(async (socket, next) => {
 io.on("connection", async (socket) => {
 	console.log("connected");
 
-	const user = await getUser(socket.data.user.sub);
+	const user = await getUsername(socket.data.user.sub);
 	socket.data.username = user.username;
 	socket.emit("USERNAME_INFO", user.username);
 
@@ -59,11 +60,39 @@ io.on("connection", async (socket) => {
 		socket.emit("GAMES_FOUND", games);
 	});
 
-	socket.on("SEND_CREATE_GAME", () => {
-		games[id] = { players: 0, spectators: 0, state: startPosition };
-		id += 1;
-		socket.emit("GAMES_FOUND", games);
-	});
+	socket.on(
+		"CREATE_GAME",
+		async ({
+			opponent,
+			userColor,
+		}: {
+			opponent: string;
+			userColor: ColorOptions;
+		}) => {
+			if (opponent === "" || opponent === socket.data.username) {
+				return;
+			}
+			const opponentId = await getUserId(opponent).then((res) => {
+				return res.userid;
+			});
+			let whiteUser = socket.data.user.sub;
+			let blackUser = opponentId;
+			const randColor = Math.floor(Math.random() * 2);
+			if (
+				userColor === "black" ||
+				(userColor === "random" && randColor === 1)
+			) {
+				whiteUser = opponentId;
+				blackUser = socket.data.user.sub;
+			}
+
+			games[id] = { players: 0, spectators: 0, state: startPosition };
+			id += 1;
+
+			addGame(whiteUser, blackUser);
+			socket.emit("GAMES_FOUND", games);
+		}
+	);
 
 	socket.on("SEND_JOIN_GAME", (gameId: string) => {
 		if (gameId in games) {

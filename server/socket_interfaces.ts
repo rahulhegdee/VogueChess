@@ -1,4 +1,5 @@
 import { TokenPayload } from "google-auth-library";
+import { ColorOptions } from "./types";
 
 export interface SocketData {
 	user: TokenPayload;
@@ -7,7 +8,13 @@ export interface SocketData {
 
 export interface ClientToServerEvents {
 	SEND_REQUEST_GAMES: () => void;
-	SEND_CREATE_GAME: () => void;
+	CREATE_GAME: ({
+		opponent,
+		userColor,
+	}: {
+		opponent: string;
+		userColor: ColorOptions;
+	}) => void;
 	SEND_JOIN_GAME: (gameId: string) => void;
 	SEND_LEAVE_GAME: (gameId: string) => void;
 	MAKE_MOVE: (gameInfo: string[2]) => void;

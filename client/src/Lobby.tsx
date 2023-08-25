@@ -1,8 +1,10 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./App";
 import { useNavigate } from "react-router-dom";
+import CreateGame from "./CreateGame";
 function Lobby() {
 	const [games, setGames] = useState<{}>({});
+	const [showCreateGame, setShowCreateGame] = useState(false);
 	const socket = useContext(SocketContext);
 	const navigate = useNavigate();
 	useEffect(() => {
@@ -18,11 +20,6 @@ function Lobby() {
 			socket.off("GAMES_FOUND", displayGames);
 		};
 	}, [socket]);
-
-	function createGame() {
-		// add the ability to set time control, color, game type, etc. here
-		socket.emit("SEND_CREATE_GAME");
-	}
 
 	function joinGame(id: string) {
 		navigate(`/game/${id}`);
@@ -43,7 +40,10 @@ function Lobby() {
 			) : (
 				<p>No Games.</p>
 			)}
-			<button onClick={createGame}>Create Game</button>
+			<button onClick={() => setShowCreateGame(!showCreateGame)}>
+				Create Game
+			</button>
+			{showCreateGame && <CreateGame />}
 		</div>
 	);
 }

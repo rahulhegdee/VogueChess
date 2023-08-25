@@ -34,7 +34,7 @@ async function addOrUpdateUser(
 	}
 }
 
-async function getUser(userId: string) {
+async function getUsername(userId: string) {
 	try {
 		let res = await pool.query("SELECT Username FROM users WHERE UserID = $1", [
 			userId,
@@ -46,16 +46,28 @@ async function getUser(userId: string) {
 	}
 }
 
+async function getUserId(username: string) {
+	try {
+		let res = await pool.query("SELECT UserID FROM users WHERE Username = $1", [
+			username,
+		]);
+		const foundUser = res.rows[0];
+		return foundUser;
+	} catch (err) {
+		console.error(err);
+	}
+}
+
 async function addGame(
 	whiteUserId: string,
 	blackUserId: string,
-	timeControl: number,
-	increment: number
+	timeControl?: number,
+	increment?: number
 ) {
 	const dateTime = Date.now();
 	const fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	try {
-		await pool.query(
+		let res = await pool.query(
 			"INSERT INTO games (WhiteUser, BlackUser, TimeControl, Increment, FEN, DateTime) VALUES ($1, $2, $3, $4, $5, to_timestamp($6));",
 			[whiteUserId, blackUserId, timeControl, increment, fen, dateTime]
 		);
@@ -81,4 +93,4 @@ async function getUserGames(
 	}
 }
 
-export { addOrUpdateUser, getUser, addGame, getUserGames };
+export { addOrUpdateUser, getUsername, getUserId, addGame, getUserGames };
