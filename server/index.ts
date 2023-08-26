@@ -8,7 +8,15 @@ import {
 	InterServerEvents,
 	SocketData,
 } from "./socket_interfaces";
-import { getUsername, getUserId, addOrUpdateUser, addGame } from "./database";
+import {
+	getUsername,
+	getUserId,
+	addOrUpdateUser,
+	addGame,
+	getUserGames,
+	updateGame,
+	getGame,
+} from "./database";
 import { ColorOptions } from "./types";
 
 const port = process.env.PORT || 8080;
@@ -26,9 +34,6 @@ const io = new Server<
 	},
 });
 
-let id = 0;
-const startPosition =
-	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 let games: { [key: string]: any } = {};
 
 io.use(async (socket, next) => {
@@ -56,8 +61,9 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	socket.on("SEND_REQUEST_GAMES", () => {
-		socket.emit("GAMES_FOUND", games);
+	socket.on("REQUEST_GAMES", async () => {
+		const res = await getUserGames(socket.data.user.sub);
+		socket.emit("GAMES_FOUND", res);
 	});
 
 	socket.on(
@@ -72,9 +78,12 @@ io.on("connection", async (socket) => {
 			if (opponent === "" || opponent === socket.data.username) {
 				return;
 			}
-			const opponentId = await getUserId(opponent).then((res) => {
-				return res.userid;
-			});
+
+			const opponentId = await getUserId(opponent);
+			if (opponentId === "") {
+				return;
+			}
+
 			let whiteUser = socket.data.user.sub;
 			let blackUser = opponentId;
 			const randColor = Math.floor(Math.random() * 2);
@@ -86,23 +95,19 @@ io.on("connection", async (socket) => {
 				blackUser = socket.data.user.sub;
 			}
 
-			games[id] = { players: 0, spectators: 0, state: startPosition };
-			id += 1;
-
 			addGame(whiteUser, blackUser);
-			socket.emit("GAMES_FOUND", games);
+
+			const res = await getUserGames(socket.data.user.sub);
+			socket.emit("GAMES_FOUND", res);
 		}
 	);
 
-	socket.on("SEND_JOIN_GAME", (gameId: string) => {
-		if (gameId in games) {
-			games[gameId].players === 2
-				? (games[gameId].spectators += 1)
-				: (games[gameId].players += 1);
+	socket.on("SEND_JOIN_GAME", async (gameId: string) => {
+		const res = await getGame(gameId);
+		if (res.error == null) {
 			socket.join(`game${gameId}`);
-			const gameState = games[gameId].state;
 			//necessary if the game is ongoing and the client disconnects and reconnects
-			socket.emit("UPDATE_GAME", gameState);
+			socket.emit("UPDATE_GAME", res.fen);
 		}
 	});
 
@@ -113,11 +118,11 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	socket.on("MAKE_MOVE", (gameInfo: string[2]) => {
+	socket.on("MAKE_MOVE", async (gameInfo: string[2]) => {
 		const gameId = gameInfo[0];
 		const gameState = gameInfo[1];
-		if (gameId in games) {
-			games[gameId].state = gameState;
+		const isGameUpdated = await updateGame(gameId, gameState);
+		if (isGameUpdated === true) {
 			socket.to(`game${gameId}`).emit("UPDATE_GAME", gameState);
 		}
 	});
