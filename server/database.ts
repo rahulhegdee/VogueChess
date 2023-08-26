@@ -106,7 +106,7 @@ function convertGameIdForDB(gameId: string) {
 	).toLocaleString();
 	console.log(dateTimeOne);
 	const dateTime = gameId.substring(dateTimeStartIndex + 1).replace("T", " ");
-	return [whiteUser, dateTime];
+	return [whiteUser, dateTimeOne];
 }
 
 async function getGame(gameId: string) {
@@ -117,7 +117,7 @@ async function getGame(gameId: string) {
 	console.log(dateTime);
 	try {
 		let res = await pool.query(
-			"SELECT * FROM games WHERE datetime = $1::timestamp(0)",
+			"SELECT * FROM games WHERE datetime = $1::timestamp",
 			[dateTime]
 		);
 		console.log(res);
