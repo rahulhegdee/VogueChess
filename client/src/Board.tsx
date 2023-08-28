@@ -78,7 +78,12 @@ function Board() {
 
 	function squareSelectionHandler(square: Square) {
 		setSelectedSquare(square);
-		const color = username === gameInfo?.white ? "w" : "b";
+		let color = "s"; // s = spectator
+		if (gameInfo != null && username === gameInfo.white) {
+			color = "w";
+		} else if (gameInfo != null && username === gameInfo.black) {
+			color = "b";
+		}
 		const moves = game
 			.moves({
 				square,

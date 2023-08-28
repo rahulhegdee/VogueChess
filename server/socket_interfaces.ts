@@ -7,7 +7,7 @@ export interface SocketData {
 }
 
 export interface ClientToServerEvents {
-	REQUEST_GAMES: () => void;
+	REQUEST_GAMES: (username?: string) => void;
 	CREATE_GAME: ({
 		opponent,
 		userColor,

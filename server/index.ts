@@ -60,8 +60,12 @@ io.on("connection", async (socket) => {
 		}
 	});
 
-	socket.on("REQUEST_GAMES", async () => {
-		const res = await getUserGames(socket.data.user.sub);
+	socket.on("REQUEST_GAMES", async (username?: string) => {
+		let userId = socket.data.user.sub;
+		if (username != null) {
+			userId = await getUserId(username);
+		}
+		const res = await getUserGames(userId);
 		socket.emit("GAMES_FOUND", res);
 	});
 

@@ -3,6 +3,7 @@ import Lobby from "./Lobby";
 import Board from "./Board";
 import CreateUser from "./CreateUser";
 import { UserContext } from "./App";
+import UserProfile from "./UserProfile";
 import { useContext } from "react";
 
 type HomeProps = {
@@ -21,6 +22,7 @@ function Home({ setUsername }: HomeProps) {
 			element: <Lobby />,
 		},
 		{ path: "/game/:gameID", element: <Board /> },
+		{ path: "/u/:username", element: <UserProfile /> },
 	]);
 
 	return username !== "" && username != null ? (
