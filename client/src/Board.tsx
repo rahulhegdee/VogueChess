@@ -164,6 +164,7 @@ function Board() {
 					promotionToSquare={promotionSquare}
 					showPromotionDialog={showPromotionDialog}
 					onPromotionPieceSelect={onPromotionPieceSelect}
+					boardOrientation={username === gameInfo.white ? "white" : "black"}
 				/>
 			)}
 		</div>
