@@ -2,13 +2,15 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Lobby from "./Lobby";
 import Board from "./Board";
 import CreateUser from "./CreateUser";
+import { UserContext } from "./App";
+import { useContext } from "react";
 
 type HomeProps = {
-	username: string;
 	setUsername: (u: string) => void;
 };
 
-function Home({ username, setUsername }: HomeProps) {
+function Home({ setUsername }: HomeProps) {
+	const username = useContext(UserContext);
 	const router = createBrowserRouter([
 		{
 			path: "/",
@@ -21,7 +23,7 @@ function Home({ username, setUsername }: HomeProps) {
 		{ path: "/game/:gameID", element: <Board /> },
 	]);
 
-	return username !== "" ? (
+	return username !== "" && username != null ? (
 		<RouterProvider router={router} />
 	) : (
 		<CreateUser setUsername={setUsername} />

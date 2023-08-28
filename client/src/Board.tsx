@@ -7,6 +7,8 @@ import { useState, useMemo, useEffect, useContext, useCallback } from "react";
 import { Chess } from "chess.js";
 import { SocketContext } from "./App";
 import { useLocation } from "react-router-dom";
+import { GameInfo } from "./utils/types";
+import { UserContext } from "./App";
 
 function Board() {
 	const path = useLocation();
@@ -14,6 +16,7 @@ function Board() {
 		return path.pathname.substring(6);
 	}, [path]);
 	const socket = useContext(SocketContext);
+	const username = useContext(UserContext);
 	const [selectedSquare, setSelectedSquare] = useState<Square | null>();
 	const [possibleMoves, setPossibleMoves] = useState<any[]>();
 	const [showPromotionDialog, setShowPromotionDialog] = useState(false);
@@ -21,28 +24,20 @@ function Board() {
 	const [animationDuration, setAnimationDuration] = useState<number>(0);
 	const [isInitialUpdate, setIsInitialUpdate] = useState<boolean>(true);
 	const [game, setGame] = useState<Chess>(new Chess());
+	const [gameInfo, setGameInfo] = useState<GameInfo>();
 
-	const updateGame = useCallback(
-		(modifier?: (g: Chess) => void) => {
-			const newState = new Chess(game.fen());
+	const updateGame = useCallback((modifier?: (g: Chess) => void) => {
+		setGame((prevGame) => {
+			const newState = new Chess(prevGame.fen());
 			if (modifier != null) {
 				modifier(newState);
 			}
-			setGame(newState);
-		},
-		[game]
-	);
+			return newState;
+		});
+	}, []);
 
-	useEffect(() => {
-		socket.emit("SEND_JOIN_GAME", gameId);
-
-		return () => {
-			socket.emit("SEND_LEAVE_GAME", gameId);
-		};
-	}, [socket, gameId]);
-
-	useEffect(() => {
-		function loadGameState(newState: string) {
+	const loadGameState = useCallback(
+		(newState: string) => {
 			updateGame((g: Chess) => {
 				g.load(newState);
 			});
@@ -54,21 +49,42 @@ function Board() {
 			} else {
 				setAnimationDuration(250);
 			}
+		},
+		[isInitialUpdate, updateGame]
+	);
+
+	useEffect(() => {
+		function addGameInfo(gameInfo: GameInfo) {
+			setGameInfo(gameInfo);
+			loadGameState(gameInfo.fen);
 		}
 
+		socket.emit("SEND_JOIN_GAME", gameId);
+		socket.on("GAME_INFO", addGameInfo);
+
+		return () => {
+			socket.emit("SEND_LEAVE_GAME", gameId);
+			socket.off("GAME_INFO", addGameInfo);
+		};
+	}, [socket, gameId, loadGameState]);
+
+	useEffect(() => {
 		socket.on("UPDATE_GAME", loadGameState);
 
 		return () => {
 			socket.off("UPDATE_GAME", loadGameState);
 		};
-	}, [socket, updateGame, isInitialUpdate]);
+	}, [socket, isInitialUpdate, loadGameState]);
 
 	function squareSelectionHandler(square: Square) {
 		setSelectedSquare(square);
-		const moves = game.moves({
-			square,
-			verbose: true,
-		});
+		const color = username === gameInfo?.white ? "w" : "b";
+		const moves = game
+			.moves({
+				square,
+				verbose: true,
+			})
+			.filter((move) => move.color === color);
 		setPossibleMoves(moves);
 	}
 
@@ -131,15 +147,21 @@ function Board() {
 	}
 
 	return (
-		<Chessboard
-			boardWidth={500}
-			onSquareClick={onSquareClick}
-			animationDuration={animationDuration}
-			position={game.fen()}
-			promotionToSquare={promotionSquare}
-			showPromotionDialog={showPromotionDialog}
-			onPromotionPieceSelect={onPromotionPieceSelect}
-		/>
+		<div>
+			{gameInfo == null ? (
+				<p>Loading...</p>
+			) : (
+				<Chessboard
+					boardWidth={500}
+					onSquareClick={onSquareClick}
+					animationDuration={animationDuration}
+					position={game.fen()}
+					promotionToSquare={promotionSquare}
+					showPromotionDialog={showPromotionDialog}
+					onPromotionPieceSelect={onPromotionPieceSelect}
+				/>
+			)}
+		</div>
 	);
 }
 

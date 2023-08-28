@@ -22,6 +22,7 @@ export interface ClientToServerEvents {
 }
 
 export interface ServerToClientEvents {
+	GAME_INFO: (gameInfo: any) => void;
 	GAMES_FOUND: (games: any) => void;
 	UPDATE_GAME: (gameState: any) => void;
 	USERNAME_INFO: (user: string) => void;

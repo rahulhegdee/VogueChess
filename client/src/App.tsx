@@ -5,6 +5,7 @@ import Home from "./Home";
 import { useCookies } from "react-cookie";
 
 export const SocketContext = createContext<Socket>(io());
+export const UserContext = createContext<string>("");
 
 function App() {
 	const [socket, setSocket] = useState<Socket>(io());
@@ -13,7 +14,6 @@ function App() {
 	const [username, setUsername] = useState("");
 
 	useEffect(() => {
-		console.log(socket);
 		socket.connect();
 
 		socket.on("connect", () => {
@@ -48,14 +48,15 @@ function App() {
 	return (
 		<div>
 			{isConnected ? (
-				<SocketContext.Provider value={socket}>
-					<Home
-						username={username}
-						setUsername={(u: string) => {
-							setUsername(u);
-						}}
-					/>
-				</SocketContext.Provider>
+				<UserContext.Provider value={username}>
+					<SocketContext.Provider value={socket}>
+						<Home
+							setUsername={(u: string) => {
+								setUsername(u);
+							}}
+						/>
+					</SocketContext.Provider>
+				</UserContext.Provider>
 			) : (
 				<Login
 					setToken={(t) => {

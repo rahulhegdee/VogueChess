@@ -38,7 +38,6 @@ let games: { [key: string]: any } = {};
 
 io.use(async (socket, next) => {
 	const token = socket.handshake.auth.token;
-	console.log(token);
 	const verification = await verify(token);
 	if (verification.user != null && verification?.error == null) {
 		socket.data.user = verification.user;
@@ -52,8 +51,8 @@ io.on("connection", async (socket) => {
 	console.log("connected");
 
 	const user = await getUsername(socket.data.user.sub);
-	socket.data.username = user.username;
-	socket.emit("USERNAME_INFO", user.username);
+	socket.data.username = user;
+	socket.emit("USERNAME_INFO", user);
 
 	socket.on("CREATE_USER", (username: string) => {
 		if (socket.data.username == "") {
@@ -107,7 +106,7 @@ io.on("connection", async (socket) => {
 		if (res.error == null) {
 			socket.join(`game${gameId}`);
 			//necessary if the game is ongoing and the client disconnects and reconnects
-			socket.emit("UPDATE_GAME", res.fen);
+			socket.emit("GAME_INFO", res);
 		}
 	});
 

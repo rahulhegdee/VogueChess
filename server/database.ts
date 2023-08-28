@@ -86,7 +86,7 @@ async function getUserGames(
 ) {
 	try {
 		let res = await pool.query(
-			"SELECT * FROM games WHERE whiteuser = $1 OR blackuser = $1",
+			"SELECT games.*, users_white.username AS white_username, users_black.username AS black_username FROM games JOIN users AS users_white ON users_white.userid = games.whiteuser JOIN users AS users_black ON users_black.userid = games.blackuser WHERE whiteuser = $1 OR blackuser = $1",
 			[userId]
 		);
 		return res.rows;
@@ -117,14 +117,24 @@ async function getGame(gameId: string) {
 	console.log(dateTime);
 	try {
 		let res = await pool.query(
-			"SELECT * FROM games WHERE datetime = $1::timestamp",
-			[dateTime]
+			"SELECT games.*, users_white.username AS white_username, users_black.username AS black_username FROM games JOIN users AS users_white ON users_white.userid = games.whiteuser JOIN users AS users_black ON users_black.userid = games.blackuser WHERE whiteuser = $2 AND games.datetime = $1::timestamp",
+			[dateTime, whiteUser]
 		);
-		console.log(res);
 		if (res.rowCount === 0) {
 			return { error: "Game not found." };
 		}
-		return res.rows[0];
+		const resGame = res.rows[0];
+		const gameInfo = {
+			white: resGame.white_username,
+			black: resGame.black_username,
+			fen: resGame.fen,
+			dateTime: resGame.datetime,
+			timeControl: resGame.timecontrol,
+			isComplete: resGame.iscomplete,
+			winner: resGame.winner,
+			error: null,
+		};
+		return gameInfo;
 	} catch (err) {
 		console.error(err);
 		return { error: "Game not found." };

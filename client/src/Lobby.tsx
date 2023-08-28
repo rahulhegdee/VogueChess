@@ -2,15 +2,13 @@ import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./App";
 import { Link } from "react-router-dom";
 import CreateGame from "./CreateGame";
+import { GameData } from "./utils/types";
 function Lobby() {
-	const [games, setGames] = useState<
-		{ whiteuser: string; blackuser: string; fen: string; datetime: any }[]
-	>([]);
+	const [games, setGames] = useState<GameData[]>([]);
 	const [showCreateGame, setShowCreateGame] = useState(false);
 	const socket = useContext(SocketContext);
 	useEffect(() => {
 		function displayGames(data: []) {
-			console.log(data);
 			setGames(data);
 		}
 
@@ -32,7 +30,7 @@ function Lobby() {
 								to={`/game/${game.whiteuser},${game.datetime}`}
 								key={`${game.whiteuser},${game.datetime}`}
 							>
-								{`${game.whiteuser} vs. ${game.blackuser}`}
+								{`${game.white_username} vs. ${game.black_username}`}
 							</Link>
 						);
 					})}
